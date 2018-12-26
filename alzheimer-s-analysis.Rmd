@@ -1,6 +1,16 @@
 ---
 title: "Alzheimer's Analysis"
 output: rmarkdown::github_document
+=======
+Adapted from: https://www.kaggle.com/obrienmitch94/alzheimer-s-analysis
+output: rmarkdown::github_document
+
+---
+```{r, echo = FALSE}
+knitr::opts_chunk$set(collapse=TRUE, comment="##", fig.retina=2, fig.path = "README_figs/README-")
+```
+
+**If you find this kernel interesting or you learned something from it, I would really appreciate an upvote. Additionally, if you have any comments, I would really like the constructive criticism. Thank you!**
 
 ---
 ```{r, echo = FALSE}
