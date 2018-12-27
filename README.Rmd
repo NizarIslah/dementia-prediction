@@ -1,16 +1,7 @@
 ---
 title: "Alzheimer's Analysis"
-output: rmarkdown::github_document
-=======
 Adapted from: https://www.kaggle.com/obrienmitch94/alzheimer-s-analysis
 output: rmarkdown::github_document
-
----
-```{r, echo = FALSE}
-knitr::opts_chunk$set(collapse=TRUE, comment="##", fig.retina=2, fig.path = "README_figs/README-")
-```
-
-**If you find this kernel interesting or you learned something from it, I would really appreciate an upvote. Additionally, if you have any comments, I would really like the constructive criticism. Thank you!**
 
 ---
 ```{r, echo = FALSE}
@@ -313,9 +304,9 @@ Dropping group variables.
 ```{r}
 #lasso
 
-# splitting data into training set and set set with 80-20 split
-sample_size<-floor(0,8*nrow(train))
-trainind<-sample(seq_len(nrow(train)), size=sample_size)
+# splitting data into training set and test set with 80-20 split
+sample_size<-floor(0.8*nrow(train))
+train_ind<-sample(seq_len(nrow(train)), size=sample_size)
 
 train1<-train[train_ind,]
 test_set<-train[-train_ind,]
@@ -341,7 +332,7 @@ pred<-predict(lasso.mod, test_set)
 confusionMatrix(data=pred, reference=test_set$CDR)
 ```
 
-After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of 84% was achieved with logistic regression.
+After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of ~83% was achieved with the logistic regression model.
 
 ##Support Vector Machine
 ```{r}
