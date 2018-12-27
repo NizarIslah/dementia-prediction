@@ -303,15 +303,23 @@ Next I center and scale all numeric predictors. Some models benefit from having 
 ```{r}
 #drop group
 
-train1<-as.data.frame(cbind(numeric_variables, factor_variables))
+train<-as.data.frame(cbind(numeric_variables, factor_variables))
 
-train1<-train1[,c(-8,-9,-10)]
+train<-train[,c(-8,-9,-10)]
 ```
 Dropping group variables.  
 
 ##Logistic Regression with $L_{1} Penalty$
 ```{r}
 #lasso
+
+# splitting data into training set and set set with 80-20 split
+sample_size<-floor(0,8*nrow(train))
+trainind<-sample(seq_len(nrow(train)), size=sample_size)
+
+train1<-train[train_ind,]
+test_set<-train[-train_ind,]
+
 ctrl<-trainControl(method = "cv", number = 10)
 set.seed(11)
 lasso.mod<-train(CDR~., data = train1, method = "glmnet", metric = "Accuracy", trControl = ctrl,
@@ -324,7 +332,16 @@ lasso.mod<-train(CDR~., data = train1, method = "glmnet", metric = "Accuracy", t
 
 I start by setting the seed to make my results reproducible. I use the glmnet method to fit a logistic regression model with the $L_1$ penalty. This penalty can shrink some coefficients to 0. This conducts feature selection and helps with overfitting. The best tune was when $\lambda=.000517$ which produces an accuracy of 83%.  
 
-Based on the coefficients, there weren't any variables dropped from the model. It seems that Age, EDUC, SES, and ASF have the largest coefficients. It will be interesting to check the variable importance of other models I run.  
+Based on the coefficients, there weren't any variables dropped from the model. It seems that Age, EDUC, SES, and ASF have the largest coefficients. It will be interesting to check the variable importance of other models I run. 
+
+##Prediction Accuracy of Logistic Regression
+```{r}
+
+pred<-predict(lasso.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+```
+
+After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of 84% was achieved with logistic regression.
 
 ##Support Vector Machine
 ```{r}

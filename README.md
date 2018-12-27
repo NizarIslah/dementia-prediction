@@ -448,9 +448,9 @@ Next I center and scale all numeric predictors. Some models benefit from having 
 ``` r
 #drop group
 
-train1<-as.data.frame(cbind(numeric_variables, factor_variables))
+train<-as.data.frame(cbind(numeric_variables, factor_variables))
 
-train1<-train1[,c(-8,-9,-10)]
+train<-train[,c(-8,-9,-10)]
 ```
 
 Dropping group variables.
@@ -460,6 +460,14 @@ Logistic Regression with *L*<sub>1</sub>*P**e**n**a**l**t**y*
 
 ``` r
 #lasso
+
+# splitting data into training set and test set with 80-20 split
+sample_size<-floor(0.8*nrow(train))
+train_ind<-sample(seq_len(nrow(train)), size=sample_size)
+
+train1<-train[train_ind,]
+test_set<-train[-train_ind,]
+
 ctrl<-trainControl(method = "cv", number = 10)
 set.seed(11)
 lasso.mod<-train(CDR~., data = train1, method = "glmnet", metric = "Accuracy", trControl = ctrl,
@@ -474,6 +482,43 @@ I start by setting the seed to make my results reproducible. I use the glmnet me
 
 Based on the coefficients, there weren't any variables dropped from the model. It seems that Age, EDUC, SES, and ASF have the largest coefficients. It will be interesting to check the variable importance of other models I run.
 
+Prediction Accuracy of Logistic Regression
+------------------------------------------
+
+``` r
+
+pred<-predict(lasso.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  0  1
+##          0 36  8
+##          1  5 26
+##                                           
+##                Accuracy : 0.8267          
+##                  95% CI : (0.7219, 0.9043)
+##     No Information Rate : 0.5467          
+##     P-Value [Acc > NIR] : 3.126e-07       
+##                                           
+##                   Kappa : 0.6476          
+##  Mcnemar's Test P-Value : 0.5791          
+##                                           
+##             Sensitivity : 0.8780          
+##             Specificity : 0.7647          
+##          Pos Pred Value : 0.8182          
+##          Neg Pred Value : 0.8387          
+##              Prevalence : 0.5467          
+##          Detection Rate : 0.4800          
+##    Detection Prevalence : 0.5867          
+##       Balanced Accuracy : 0.8214          
+##                                           
+##        'Positive' Class : 0               
+## 
+```
+
+After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of 72% was achieved with the logistic regression model.
+
 Support Vector Machine
 ----------------------
 
@@ -485,15 +530,15 @@ varImp(svm.mod)
 ## ROC curve variable importance
 ## 
 ##       Importance
-## MMSE    100.0000
-## nWBV     52.4295
-## M.F.F    34.8586
-## M.F.M    34.8586
-## EDUC     32.6727
-## SES      12.3204
-## Age       2.5732
-## Visit     0.7786
-## ASF       0.0000
+## MMSE   100.00000
+## nWBV    49.39305
+## M.F.M   35.55998
+## M.F.F   35.55998
+## EDUC    31.71936
+## SES     15.60935
+## ASF      0.91900
+## Visit    0.03429
+## Age      0.00000
 
 #.86
 #max(svm.mod$results$Accuracy)
@@ -525,15 +570,15 @@ set.seed(11)
 rf.mod<-randomForest(CDR~., data = train1, importance =T)
 importance(rf.mod, type = 1)
 ##       MeanDecreaseAccuracy
-## Visit            -5.226894
-## Age              15.434347
-## EDUC             23.197152
-## SES              14.072956
-## MMSE             75.394738
-## nWBV             24.072400
-## ASF              17.489972
-## M.F.F            13.287232
-## M.F.M            12.844535
+## Visit            -5.829291
+## Age              12.672976
+## EDUC             19.260549
+## SES              10.553269
+## MMSE             63.903599
+## nWBV             18.893237
+## ASF              18.176818
+## M.F.F            13.905379
+## M.F.M            12.747117
 ```
 
 Further investigating variable importance, I turn to random forest. I use the variable importance aspect of the model to compare with logistic regression support vector machine. Due to the biased nature of randomForest default variable importance method, I use importance = T and type = 1. Seems like MMSE is most important, followed by nWBV and EDUC. Very similar to the support vector's variable importance! Interesting!
@@ -547,9 +592,9 @@ Model Assessment
 models<-list("lasso" = lasso.mod, "svm" = svm.mod, "knn" = knn.mod)
 modelCor(resamples(models))
 ##           lasso       svm       knn
-## lasso 1.0000000 0.4491280 0.1936942
-## svm   0.4491280 1.0000000 0.1759831
-## knn   0.1936942 0.1759831 1.0000000
+## lasso 1.0000000 0.5419752 0.6291955
+## svm   0.5419752 1.0000000 0.6394837
+## knn   0.6291955 0.6394837 1.0000000
 
 
 mod_accuracy<-c(0.8299826, 0.8596412,
@@ -566,7 +611,7 @@ data.frame(Model, mod_accuracy)%>%
   theme(plot.title = element_text(hjust = .5))
 ```
 
-<img src="README_figs/README-unnamed-chunk-20-1.png" width="672" />
+<img src="README_figs/README-unnamed-chunk-21-1.png" width="672" />
 
 After creating models, I like to check their correlation with each other. Looks like lasso is most correlated with xgb and not very correlated with the support vector machine and KNN. Support vector is most correlated with xgb, but, .57 is not that high of a correlation. Finally KNN is not strongly correlated with any of the other models. If I were to try stacking or some other type of ensemble, these models would be good candidates since they are fit very differently and have low correlation.
 
