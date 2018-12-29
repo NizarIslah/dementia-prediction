@@ -321,7 +321,7 @@ lasso.mod<-train(CDR~., data = train1, method = "glmnet", metric = "Accuracy", t
 #coef(lasso.mod$finalModel, lasso.mod$finalModel$lambdaOpt)
 ```
 
-I start by setting the seed to make my results reproducible. I use the glmnet method to fit a logistic regression model with the $L_1$ penalty. This penalty can shrink some coefficients to 0. This conducts feature selection and helps with overfitting. The best tune was when $\lambda=.000517$ which produces an accuracy of 83%.  
+I start by setting the seed to make my results reproducible. I use the glmnet method to fit a logistic regression model with the $L_1$ penalty. This penalty can shrink some coefficients to 0. This conducts feature selection and helps with overfitting. The best tune was when $\lambda=.000517$ which produces an accuracy of ~83%.  
 
 Based on the coefficients, there weren't any variables dropped from the model. It seems that Age, EDUC, SES, and ASF have the largest coefficients. It will be interesting to check the variable importance of other models I run. 
 
@@ -332,7 +332,7 @@ pred<-predict(lasso.mod, test_set)
 confusionMatrix(data=pred, reference=test_set$CDR)
 ```
 
-After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of ~83% was achieved with the logistic regression model.
+After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of ~80% was achieved with the logistic regression model.
 
 ##Support Vector Machine
 ```{r}
@@ -348,6 +348,14 @@ varImp(svm.mod)
 
 Next I fit a support vector machine. These models tend to be powerful at the expense of interpretability. The best tune is $Cost=8$ with accuracy of 86%. Notably better than the logistic regression model previously fitted. According to variable importance of the support vector machine, MMSE is by far the most important variable. Second most important is nWBV. Then, sex and EDUC are tied for third. Interesting to compare with the coefficients of the logistic regression.  
 
+##Prediction Accuracy of SVM
+```{r}
+
+pred<-predict(svm.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+```
+Testing on unseen data, the SVM model predicts the correct CDR with  ~83% accuracy.
+
 ##KNN
 ```{r}
 set.seed(11)
@@ -360,6 +368,15 @@ knn.mod<-train(CDR~., data = train1, method = "knn", metric = "Accuracy", trCont
 ```
 
 Now I create a KNN model. The optimal tune is with $k=5$. This means that when predicting a new point, the five "closest" points determine what the new one will be. With an accuracy of 81%, there is a drop in performance compared to logistic regression and support vector machine.  
+
+##Prediction Accuracy of KNN
+```{r}
+
+pred<-predict(knn.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+```
+Testing on unseen data, the KNN model predicts the correct CDR with ~80% accuracy.
+
 
 ##Random Forest
 ```{r}

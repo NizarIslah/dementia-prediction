@@ -478,7 +478,7 @@ lasso.mod<-train(CDR~., data = train1, method = "glmnet", metric = "Accuracy", t
 #coef(lasso.mod$finalModel, lasso.mod$finalModel$lambdaOpt)
 ```
 
-I start by setting the seed to make my results reproducible. I use the glmnet method to fit a logistic regression model with the *L*<sub>1</sub> penalty. This penalty can shrink some coefficients to 0. This conducts feature selection and helps with overfitting. The best tune was when *λ* = .000517 which produces an accuracy of 83%.
+I start by setting the seed to make my results reproducible. I use the glmnet method to fit a logistic regression model with the *L*<sub>1</sub> penalty. This penalty can shrink some coefficients to 0. This conducts feature selection and helps with overfitting. The best tune was when *λ* = .000517 which produces an accuracy of ~83%.
 
 Based on the coefficients, there weren't any variables dropped from the model. It seems that Age, EDUC, SES, and ASF have the largest coefficients. It will be interesting to check the variable importance of other models I run.
 
@@ -493,31 +493,31 @@ confusionMatrix(data=pred, reference=test_set$CDR)
 ## 
 ##           Reference
 ## Prediction  0  1
-##          0 36  8
-##          1  5 26
+##          0 36  6
+##          1  6 27
 ##                                           
-##                Accuracy : 0.8267          
-##                  95% CI : (0.7219, 0.9043)
-##     No Information Rate : 0.5467          
-##     P-Value [Acc > NIR] : 3.126e-07       
+##                Accuracy : 0.84            
+##                  95% CI : (0.7372, 0.9145)
+##     No Information Rate : 0.56            
+##     P-Value [Acc > NIR] : 2.449e-07       
 ##                                           
-##                   Kappa : 0.6476          
-##  Mcnemar's Test P-Value : 0.5791          
+##                   Kappa : 0.6753          
+##  Mcnemar's Test P-Value : 1               
 ##                                           
-##             Sensitivity : 0.8780          
-##             Specificity : 0.7647          
-##          Pos Pred Value : 0.8182          
-##          Neg Pred Value : 0.8387          
-##              Prevalence : 0.5467          
+##             Sensitivity : 0.8571          
+##             Specificity : 0.8182          
+##          Pos Pred Value : 0.8571          
+##          Neg Pred Value : 0.8182          
+##              Prevalence : 0.5600          
 ##          Detection Rate : 0.4800          
-##    Detection Prevalence : 0.5867          
-##       Balanced Accuracy : 0.8214          
+##    Detection Prevalence : 0.5600          
+##       Balanced Accuracy : 0.8377          
 ##                                           
 ##        'Positive' Class : 0               
 ## 
 ```
 
-After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of 72% was achieved with the logistic regression model.
+After fitting the logistic regression model using the training data, I use the model with the test data to predict the CDR (Dementia rating, either 0 or 1). The results of the prediction is shown in the confusion matrix. Accuracy of ~80% was achieved with the logistic regression model.
 
 Support Vector Machine
 ----------------------
@@ -530,15 +530,15 @@ varImp(svm.mod)
 ## ROC curve variable importance
 ## 
 ##       Importance
-## MMSE   100.00000
-## nWBV    49.39305
-## M.F.M   35.55998
-## M.F.F   35.55998
-## EDUC    31.71936
-## SES     15.60935
-## ASF      0.91900
-## Visit    0.03429
-## Age      0.00000
+## MMSE     100.000
+## nWBV      50.582
+## EDUC      31.243
+## M.F.F     30.282
+## M.F.M     30.282
+## SES        7.988
+## Age        7.758
+## Visit      5.323
+## ASF        0.000
 
 #.86
 #max(svm.mod$results$Accuracy)
@@ -546,6 +546,43 @@ varImp(svm.mod)
 ```
 
 Next I fit a support vector machine. These models tend to be powerful at the expense of interpretability. The best tune is *C**o**s**t* = 8 with accuracy of 86%. Notably better than the logistic regression model previously fitted. According to variable importance of the support vector machine, MMSE is by far the most important variable. Second most important is nWBV. Then, sex and EDUC are tied for third. Interesting to compare with the coefficients of the logistic regression.
+
+Prediction Accuracy of SVM
+--------------------------
+
+``` r
+
+pred<-predict(svm.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  0  1
+##          0 37  7
+##          1  5 26
+##                                           
+##                Accuracy : 0.84            
+##                  95% CI : (0.7372, 0.9145)
+##     No Information Rate : 0.56            
+##     P-Value [Acc > NIR] : 2.449e-07       
+##                                           
+##                   Kappa : 0.6732          
+##  Mcnemar's Test P-Value : 0.7728          
+##                                           
+##             Sensitivity : 0.8810          
+##             Specificity : 0.7879          
+##          Pos Pred Value : 0.8409          
+##          Neg Pred Value : 0.8387          
+##              Prevalence : 0.5600          
+##          Detection Rate : 0.4933          
+##    Detection Prevalence : 0.5867          
+##       Balanced Accuracy : 0.8344          
+##                                           
+##        'Positive' Class : 0               
+## 
+```
+
+Testing on unseen data, the SVM model predicts the correct CDR with ~83% accuracy.
 
 KNN
 ---
@@ -562,6 +599,43 @@ knn.mod<-train(CDR~., data = train1, method = "knn", metric = "Accuracy", trCont
 
 Now I create a KNN model. The optimal tune is with *k* = 5. This means that when predicting a new point, the five "closest" points determine what the new one will be. With an accuracy of 81%, there is a drop in performance compared to logistic regression and support vector machine.
 
+Prediction Accuracy of KNN
+--------------------------
+
+``` r
+
+pred<-predict(knn.mod, test_set)
+confusionMatrix(data=pred, reference=test_set$CDR)
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  0  1
+##          0 34  7
+##          1  8 26
+##                                           
+##                Accuracy : 0.8             
+##                  95% CI : (0.6917, 0.8835)
+##     No Information Rate : 0.56            
+##     P-Value [Acc > NIR] : 1.141e-05       
+##                                           
+##                   Kappa : 0.5955          
+##  Mcnemar's Test P-Value : 1               
+##                                           
+##             Sensitivity : 0.8095          
+##             Specificity : 0.7879          
+##          Pos Pred Value : 0.8293          
+##          Neg Pred Value : 0.7647          
+##              Prevalence : 0.5600          
+##          Detection Rate : 0.4533          
+##    Detection Prevalence : 0.5467          
+##       Balanced Accuracy : 0.7987          
+##                                           
+##        'Positive' Class : 0               
+## 
+```
+
+Testing on unseen data, the KNN model predicts the correct CDR with ~80% accuracy.
+
 Random Forest
 -------------
 
@@ -570,15 +644,15 @@ set.seed(11)
 rf.mod<-randomForest(CDR~., data = train1, importance =T)
 importance(rf.mod, type = 1)
 ##       MeanDecreaseAccuracy
-## Visit            -5.829291
-## Age              12.672976
-## EDUC             19.260549
-## SES              10.553269
-## MMSE             63.903599
-## nWBV             18.893237
-## ASF              18.176818
-## M.F.F            13.905379
-## M.F.M            12.747117
+## Visit            -5.543967
+## Age              12.384191
+## EDUC             18.585387
+## SES              10.363677
+## MMSE             63.741658
+## nWBV             19.513937
+## ASF              13.906929
+## M.F.F            10.890874
+## M.F.M            10.545826
 ```
 
 Further investigating variable importance, I turn to random forest. I use the variable importance aspect of the model to compare with logistic regression support vector machine. Due to the biased nature of randomForest default variable importance method, I use importance = T and type = 1. Seems like MMSE is most important, followed by nWBV and EDUC. Very similar to the support vector's variable importance! Interesting!
@@ -591,10 +665,10 @@ Model Assessment
 ``` r
 models<-list("lasso" = lasso.mod, "svm" = svm.mod, "knn" = knn.mod)
 modelCor(resamples(models))
-##           lasso       svm       knn
-## lasso 1.0000000 0.5419752 0.6291955
-## svm   0.5419752 1.0000000 0.6394837
-## knn   0.6291955 0.6394837 1.0000000
+##           lasso        svm        knn
+## lasso 1.0000000  0.2884935  0.3185306
+## svm   0.2884935  1.0000000 -0.2110145
+## knn   0.3185306 -0.2110145  1.0000000
 
 
 mod_accuracy<-c(0.8299826, 0.8596412,
@@ -611,7 +685,7 @@ data.frame(Model, mod_accuracy)%>%
   theme(plot.title = element_text(hjust = .5))
 ```
 
-<img src="README_figs/README-unnamed-chunk-21-1.png" width="672" />
+<img src="README_figs/README-unnamed-chunk-23-1.png" width="672" />
 
 After creating models, I like to check their correlation with each other. Looks like lasso is most correlated with xgb and not very correlated with the support vector machine and KNN. Support vector is most correlated with xgb, but, .57 is not that high of a correlation. Finally KNN is not strongly correlated with any of the other models. If I were to try stacking or some other type of ensemble, these models would be good candidates since they are fit very differently and have low correlation.
 
