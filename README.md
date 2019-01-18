@@ -1,7 +1,7 @@
 Alzheimer's Analysis
 ================
 
-Adapted from: <https://www.kaggle.com/obrienmitch94/alzheimer-s-analysis>
+Adapted from: <https://www.kaggle.com/ruslankl/dementia-prediction-w-tree-based-models>
 
 Introduction
 ============
@@ -741,7 +741,7 @@ confusionMatrix(data=pred, reference=valid_set$CDR)
 ## 
 ```
 
-Testing on the training set, we get an accuracy of 100%. Combined with the relatively low accuracy of 72% on the validation set, there is a case for overfitting with the KNN model. In the future, steps should be taken to reduce overfitting.
+Testing on the training set, we get an accuracy of 100%. Combined with the relatively low accuracy of 72% on the validation set, there is a case for overfitting with the KNN model. In the future, steps should be taken to reduce overfitting and increase performance on the validation set.
 
 Random Forest
 -------------
@@ -762,7 +762,7 @@ importance(rf.mod, type = 1)
 ## M.F.M            12.839844
 ```
 
-Further investigating variable importance, I turn to random forest. I use the variable importance aspect of the model to compare with logistic regression support vector machine. Due to the biased nature of randomForest default variable importance method, I use importance = T and type = 1. Seems like MMSE is most important, followed by nWBV and EDUC. Very similar to the support vector's variable importance! Interesting!
+Further investigating variable importance, I turn to random forest. I use the variable importance aspect of the model to compare with logistic regression support vector machine. Due to the biased nature of randomForest default variable importance method, I use importance = T and type = 1. It seems like MMSE is most important, followed by nWBV and EDUC. Very similar to the support vector's variable importance! Interesting!
 
 ``` r
 pred<-predict(rf.mod, train_set)
@@ -824,7 +824,7 @@ confusionMatrix(pred, valid_set$CDR)
 ## 
 ```
 
-The random forest with default parameters (nTree = 500, mtry = 2) achieves 100% accuracy on the training set and 86.7% on the validation set, performing better than most of the other models. The parameters should be fine-tuned to achieve better accuracy on the validation set. Below we find the optimal mtry:
+The random forest with default parameters (nTree = 500, mtry = 2) achieves 100% accuracy on the training set and 86.7% on the validation set, performing better than most of the other models. The parameters should be fine-tuned to achieve better accuracy on the validation set. Below I attempt to find the optimal mtry (number of variables at each split):
 
 ``` r
 a = c()
@@ -850,11 +850,9 @@ plot(3:8, a)
 # confusionMatrix(pred, valid_set$CDR)
 ```
 
-The plot shows that using 3,4 and 6 variables at each split all perform equally well compared to the default value. There a dip in accuracy going from 4 to 5, and after 6 variables.Next we will optimize the number of trees to grow.
+The plot shows that using 3,4 and 6 variables at each split all perform equally well compared to the default of 2. There a dip in accuracy going from 4 to 5, and after 6 variables.Next we will optimize the number of trees to grow.
 
 ------------------------------------------------------------------------
-
-Since XGB usually performs so well, it would be criminal not to fit one. However, it will not run in the kernel so I will report my results based on my markdown. The best tune is listed above and has accuracy of 86%.
 
 Model Assessment
 ================
@@ -884,6 +882,6 @@ data.frame(Model, mod_accuracy)%>%
 
 <img src="README_figs/README-unnamed-chunk-25-1.png" width="672" />
 
-After creating models, I like to check their correlation with each other. Looks like lasso is most correlated with xgb and not very correlated with the support vector machine and KNN. Support vector is most correlated with xgb, but, .57 is not that high of a correlation. Finally KNN is not strongly correlated with any of the other models. If I were to try stacking or some other type of ensemble, these models would be good candidates since they are fit very differently and have low correlation.
+After creating models, I like to check their correlation with each other. Looks like lasso is not very correlated with the support vector machine and KNN. Finally, the KNN is not strongly correlated with any of the other models. If I were to try stacking or some other type of ensemble, these models would be good candidates since they are fit very differently and have low correlation.
 
 In terms of individual model performance based on accuracy, we see that the random forest performs the best with support vector close behind. There is a noticeable drop to lasso and another big drop to KNN.
